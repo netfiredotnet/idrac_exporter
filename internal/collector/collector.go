@@ -38,6 +38,8 @@ type Collector struct {
 	SystemCpuCount        *prometheus.Desc
 	SystemBiosInfo        *prometheus.Desc
 	SystemMachineInfo     *prometheus.Desc
+	ChassisHealth         *prometheus.Desc
+	ChassisIntrusion      *prometheus.Desc
 
 	// Sensors
 	SensorsTemperature *prometheus.Desc
@@ -180,6 +182,16 @@ func NewCollector() *Collector {
 			prometheus.BuildFQName(prefix, "system", "machine_info"),
 			"Information about the machine",
 			[]string{"manufacturer", "model", "serial", "sku", "hostname"}, nil,
+		),
+		ChassisHealth: prometheus.NewDesc(
+			prometheus.BuildFQName(prefix, "chassis", "health"),
+			"Health status of the primary chassis",
+			[]string{"status"}, nil,
+		),
+		ChassisIntrusion: prometheus.NewDesc(
+			prometheus.BuildFQName(prefix, "chassis", "intrusion"),
+			"Chassis intrusion sensor, 1 when it reports an intrusion or tampering",
+			[]string{"sensor"}, nil,
 		),
 		SensorsTemperature: prometheus.NewDesc(
 			prometheus.BuildFQName(prefix, "sensors", "temperature"),
@@ -507,6 +519,8 @@ func (collector *Collector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- collector.SystemCpuCount
 	ch <- collector.SystemBiosInfo
 	ch <- collector.SystemMachineInfo
+	ch <- collector.ChassisHealth
+	ch <- collector.ChassisIntrusion
 	ch <- collector.SensorsTemperature
 	ch <- collector.SensorsFanHealth
 	ch <- collector.SensorsFanSpeed

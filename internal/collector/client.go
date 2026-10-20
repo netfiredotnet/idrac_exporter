@@ -33,6 +33,7 @@ type Client struct {
 	version int
 	path    struct {
 		System           string
+		Chassis          string
 		Thermal          string
 		ThermalSubsystem string
 		Power            string
@@ -151,6 +152,7 @@ func (client *Client) findAllEndpoints() bool {
 	}
 
 	// Paths
+	client.path.Chassis = path
 	client.path.Storage = system.Storage.OdataId
 	client.path.Memory = system.Memory.OdataId
 	client.path.Network = chassis.NetworkAdapters.OdataId
@@ -405,6 +407,19 @@ func (client *Client) RefreshSystem(mc *Collector, ch chan<- prometheus.Metric) 
 	mc.NewSystemCpuCount(ch, &resp)
 	mc.NewSystemBiosInfo(ch, &resp)
 	mc.NewSystemMachineInfo(ch, &resp)
+
+	// The chassis is read again on every scrape, because its health and
+	// intrusion sensor change while the exporter runs. A Supermicro latches
+	// an intrusion and reports the system Critical until it is re-armed, and
+	// this is the only place that says so.
+	if client.path.Chassis != "" {
+		chassis := ChassisResponse{}
+		if !client.redfish.Get(client.path.Chassis, &chassis) {
+			return false
+		}
+		mc.NewChassisHealth(ch, &chassis)
+		mc.NewChassisIntrusion(ch, &chassis)
+	}
 
 	return true
 }

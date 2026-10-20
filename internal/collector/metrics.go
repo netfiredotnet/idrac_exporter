@@ -135,6 +135,47 @@ func (mc *Collector) NewSystemMachineInfo(ch chan<- prometheus.Metric, m *System
 	)
 }
 
+func (mc *Collector) NewChassisHealth(ch chan<- prometheus.Metric, m *ChassisResponse) {
+	value := health2value(m.Status.Health)
+	if value < 0 {
+		return
+	}
+	ch <- prometheus.MustNewConstMetric(
+		mc.ChassisHealth,
+		prometheus.GaugeValue,
+		float64(value),
+		m.Status.Health,
+	)
+}
+
+// intrusion2value maps a Redfish IntrusionSensor value to 0 (normal) or 1
+// (intrusion or tampering), or -1 when the chassis does not report one.
+func intrusion2value(sensor string) int {
+	switch sensor {
+	case "":
+		return -1
+	case "Normal":
+		return 0
+	}
+	return 1
+}
+
+func (mc *Collector) NewChassisIntrusion(ch chan<- prometheus.Metric, m *ChassisResponse) {
+	if m.PhysicalSecurity == nil {
+		return
+	}
+	value := intrusion2value(m.PhysicalSecurity.IntrusionSensor)
+	if value < 0 {
+		return
+	}
+	ch <- prometheus.MustNewConstMetric(
+		mc.ChassisIntrusion,
+		prometheus.GaugeValue,
+		float64(value),
+		m.PhysicalSecurity.IntrusionSensor,
+	)
+}
+
 func (mc *Collector) NewSensorsTemperature(ch chan<- prometheus.Metric, temperature float64, id, name, units string) {
 	ch <- prometheus.MustNewConstMetric(
 		mc.SensorsTemperature,
