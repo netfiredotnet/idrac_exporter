@@ -74,6 +74,31 @@ func (w *xstring) String() string {
 	return string(*w)
 }
 
+// When unmarshalling JSON, the "xint" type can be a number or a string that
+// holds one, as some BMCs send sizes such as StripSizeBytes as strings. Any
+// other value reads as 0 instead of failing the whole response.
+type xint int64
+
+func (w *xint) UnmarshalJSON(data []byte) error {
+	var x any
+
+	*w = 0
+	if err := json.Unmarshal(data, &x); err != nil {
+		return err
+	}
+
+	switch v := x.(type) {
+	case float64:
+		*w = xint(v)
+	case string:
+		if n, err := strconv.ParseInt(strings.TrimSpace(v), 10, 64); err == nil {
+			*w = xint(n)
+		}
+	}
+
+	return nil
+}
+
 func asPtr[T any](v T) *T {
 	return &v
 }

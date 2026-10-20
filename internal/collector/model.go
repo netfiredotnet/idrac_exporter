@@ -419,10 +419,10 @@ type StorageVolume struct {
 	Id                 string   `json:"Id"`
 	Name               string   `json:"Name"`
 	Description        string   `json:"Description"`
-	BlockSizeBytes     int      `json:"BlockSizeBytes"`
+	BlockSizeBytes     xint     `json:"BlockSizeBytes"`
 	CapacityBytes      float64  `json:"CapacityBytes"`
-	OptimumIOSizeBytes int      `json:"OptimumIOSizeBytes"`
-	StripSizeBytes     int      `json:"StripSizeBytes"`
+	OptimumIOSizeBytes xint     `json:"OptimumIOSizeBytes"`
+	StripSizeBytes     xint     `json:"StripSizeBytes"`
 	DisplayName        string   `json:"DisplayName"`
 	Encrypted          bool     `json:"Encrypted"`
 	EncryptionTypes    []string `json:"EncryptionTypes"`
